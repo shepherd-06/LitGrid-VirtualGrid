@@ -41,8 +41,20 @@ class _DataProcessor:
                 self._process_file(os.path.join(self.dataset_dir, filename))
                 print("----------------------------------")
 
+    def fetch_data_by_keytype(self, key_type):
+        """
+        Fetch all data from Redis for a given key type.
+        Args:
+            key_type (str): The type of data to fetch (e.g., 'electricity_consumption_actual').
 
-if __name__ == "__main__":
-    redis_connector = RedisConnector().get_connection()
-    data_processor = _DataProcessor(redis_connector=redis_connector)
-    data_processor.run()
+        Returns:
+            dict: A dictionary with Redis keys as keys and the corresponding hash values as values.
+        """
+        return self.redis.hgetall(key_type)
+
+
+# if __name__ == "__main__":
+    # redis_connector = RedisConnector().get_connection()
+    # data_processor = _DataProcessor(redis_connector=redis_connector)
+    # data_processor.run()
+    # data_processor.fetch_data_by_keytype("wind_farms_production")
