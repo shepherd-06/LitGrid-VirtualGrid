@@ -1,8 +1,8 @@
 import os
 import json
 from datetime import datetime
-from redis_con import RedisConnector
-from key_mappings import get_redis_key_base
+from pre_processing.redis_con import RedisConnector
+from pre_processing.key_mappings import get_redis_key_base
 
 
 class _DataProcessor:

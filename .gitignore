@@ -81,8 +81,5 @@ ipython_config.py
 .Pipfile
 .Pipfile.lock
 
-# pip-compile / pipenv
-requirements*.txt
-
 # Poetry
 poetry.lock
