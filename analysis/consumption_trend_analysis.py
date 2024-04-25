@@ -1,5 +1,7 @@
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from pre_processing.data_processor import _DataProcessor
 from pre_processing.data_transformer import DataTransformer
 from pre_processing.redis_con import RedisConnector
@@ -25,38 +27,65 @@ class ConsumptionTrendAnalysis:
         data = self.data_processor.fetch_data_by_keytype(key_type)
         transformer = DataTransformer(data)
         return transformer.transform_to_dataframe()
-
+    
     def analyze_trends(self, df):
         """
-        Applies rolling averages and exponential smoothing to the data.
+        Applies per month rolling averages and exponential smoothing to the data.
         Args:
             df (DataFrame): The DataFrame to analyze.
         Returns:
             DataFrame: The DataFrame with added trend analysis columns.
         """
-        df['rolling_avg'] = df['value'].rolling(window=7, center=True).mean()
-        df['exp_smooth'] = df['value'].ewm(span=7, adjust=False).mean()
-        return df
+        # Resample the DataFrame to monthly frequency taking the sum for each month
+        monthly_df = df.resample('ME').sum()
 
-    def plot_trends(self, df, title, ylabel):
+        # Apply a rolling average with a window of 1 month
+        monthly_df['monthly_rolling_avg'] = monthly_df['value'].rolling(
+            window=1).mean()
+
+        # Apply exponential smoothing on the resampled data
+        monthly_df['exp_smooth'] = monthly_df['value'].ewm(
+            span=1, adjust=False).mean()
+
+        return monthly_df
+
+    def plot_trends(self, actual_df, planned_df, projected_df, title, ylabel):
         """
-        Plots the trends of the electricity consumption data.
-        Args:
-            df (DataFrame): The DataFrame containing the data to plot.
-            title (str): The title of the plot.
-            ylabel (str): The label for the y-axis.
+        Plots the trends of actual, planned, and projected electricity consumption data on a single graph using seaborn.
         """
         plt.figure(figsize=(14, 7))
-        plt.plot(df.index, df['value'],
-                 label='Actual Consumption', color='blue', alpha=0.3)
-        plt.plot(df.index, df['rolling_avg'],
-                 label='7-Day Rolling Average', color='red')
-        plt.plot(df.index, df['exp_smooth'],
-                 label='Exponential Smoothing', color='green')
+
+        # Set the style of seaborn
+        sns.set(style="whitegrid")
+
+        # Plot actual consumption using seaborn
+        sns.lineplot(data=actual_df, x=actual_df.index, y='monthly_rolling_avg',
+                     label='Actual Consumption', color='blue', linewidth=2.5)
+
+        # Plot planned consumption
+        sns.lineplot(data=planned_df, x=planned_df.index, y='monthly_rolling_avg',
+                     label='Planned Consumption', color='red', linestyle='--', linewidth=2.5)
+
+        # Plot projected consumption
+        sns.lineplot(data=projected_df, x=projected_df.index, y='monthly_rolling_avg',
+                     label='Projected Consumption', color='green', linestyle=':', linewidth=2.5)
+
+        # Improve the x-axis to show dates nicely
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=1))
+
+        # Rotate date labels for better readability
+        plt.xticks(rotation=45)
+
         plt.title(title)
         plt.xlabel('Date')
         plt.ylabel(ylabel)
         plt.legend()
+        plt.tight_layout()
+
+        # Optional: Despine the plot to remove the top and right borders for a cleaner look
+        sns.despine()
+
         plt.show()
 
     def perform_analysis(self):
@@ -76,14 +105,8 @@ class ConsumptionTrendAnalysis:
         projected_df = self.analyze_trends(projected_df)
 
         # Plot actual consumption trends
-        self.plot_trends(
-            actual_df, 'Electricity Consumption Trends - Actual', 'Electricity Consumption (MW)')
-
-        # Optionally, plot planned and projected consumption trends
-        self.plot_trends(
-            planned_df, 'Electricity Consumption Trends - Planned', 'Electricity Consumption (MW)')
-        self.plot_trends(
-            projected_df, 'Electricity Consumption Trends - Projected', 'Electricity Consumption (MW)')
+        self.plot_trends(actual_df, planned_df, projected_df,
+                         'Electricity Consumption Trends', 'Electricity Consumption (MW)')
 
 
 if __name__ == "__main__":
