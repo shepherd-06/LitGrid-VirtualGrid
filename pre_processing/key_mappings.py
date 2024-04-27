@@ -28,6 +28,14 @@ KEY_STRUCTURE = {
 }
 
 
+PLOT_TITLES_BY_CATEGORY = {
+    'consumption': 'Electricity Consumption Trends',
+    'production': 'Electricity Production Trends',
+    'source': 'Electricity Source Distribution',
+    'storage': 'Electricity Storage Capacity Trends'
+}
+
+
 def get_redis_key_base(filename):
     # Removes common extensions and replaces underscores with spaces
     base = filename.replace('_', ' ').replace('.json', '').strip()
