@@ -1,6 +1,6 @@
 # ECIU Challenge - Virtual Grid
 
-This project is focused on analyzing the trends in electricity consumption in Lithuania by processing and analyzing time-series data. The goal is to identify patterns, seasonality, and outliers in electricity generation and consumption, offering insights for optimizing electricity storage and distribution.
+This project aims to analyze trends in electricity consumption in Lithuania by processing and analyzing time-series data. The goal is to identify patterns, seasonality, and outliers in electricity generation and consumption, offering insights for optimizing electricity storage and distribution.
 
 ## Project Structure
 
@@ -16,8 +16,8 @@ The project consists of several Python modules, each performing specific roles i
 
 ### analysis/
 
-- `consumption_trend_analysis.py`: Conducts comprehensive trend analysis on electricity consumption data, including data fetching, statistical methods application, and visualization of trends.
-- `seasonality_detection.py`: Examines time-series data to extract and analyze seasonal patterns in electricity consumption using seasonal decomposition.
+- `trend_analysis.py`: Conducts comprehensive trend analysis on electricity consumption/production/source/storage data, including data fetching, statistical methods application, and visualization of trends. It supports dynamic analysis based on user-defined intervals such as biweekly and monthly trends, as well as specific month analysis with a range.
+- `seasonality_detection.py`: Examines time-series data to extract and analyze seasonal patterns in electricity consumption/production/source/storage using seasonal decomposition. This module dynamically handles multiple data sets based on user-selected tags, enabling customized decomposition and visualization of seasonal, trend, and residual components.
 - `outlier_detection.py`: Implements algorithms to detect anomalies in the data, indicating unusual consumption patterns or data issues.
 - `distribution_visualizer.py`: Visualizes the frequency distribution of electricity consumption values, helping to identify skewness or bimodality.
 - `key_metric_calculator.py`: Calculates key metrics such as mean, median, standard deviation, min, and max values to understand the distributions and variability in your data.
@@ -55,10 +55,11 @@ To run this project, you need Python 3.x and several packages including `redis`,
 pip install -r requirements.txt
 ```
 
+### Usage
+
+Ensure your Redis instance is operational and accessible, then run the desired module from the analysis directory to perform specific analyses or visualizations.
+
 ### Notes
 
-1. **Modules Described**: Each module's purpose is briefly described to give a clear understanding of its role in the project.
-2. **Dynamic Nature of Scripts**: Descriptions now reflect the flexibility and dynamic capabilities of the scripts like `distribution_visualizer.py` and `outlier_detection.py`.
-3. **Project End State**: Updated to reflect new capabilities added to the project.
-
-This README provides a comprehensive overview of the current state of the project and its capabilities, designed to keep project contributors and stakeholders well-informed.
+- **Enhanced Module Descriptions**: The descriptions for `trend_analysis.py` and `seasonality_detection.py` are detailed to reflect their dynamic capabilities and user-driven functionality.
+- **Comprehensive Overview**: This README not only outlines what each part of the project does but also how they interact and the flexibility offered to end-users. This should be helpful for both current project contributors and new stakeholders.
