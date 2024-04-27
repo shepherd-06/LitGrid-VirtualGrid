@@ -18,4 +18,5 @@ Hash Structure: Use Redis hashes to store different metrics under each key. For 
 5. Visualization
 Time Series Plots: Create plots to visualize the consumption over time, highlighting trends and seasonality.
 Anomaly Marking: In your plots, highlight the detected anomalies to make them stand out.
-Dashboard: Consider developing a dashboard using tools like Plotly Dash or Streamlit to interactively explore the data and results.
+
+[TODO] Dashboard: Consider developing a dashboard using tools like Plotly Dash or Streamlit to interactively explore the data and results.
