@@ -83,3 +83,5 @@ ipython_config.py
 
 # Poetry
 poetry.lock
+
+*jpg
