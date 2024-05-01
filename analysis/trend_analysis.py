@@ -8,7 +8,7 @@ from pre_processing.redis_con import RedisConnector
 from pre_processing.key_mappings import get_key_by_tags, PLOT_TITLES_BY_CATEGORY
 
 
-class ConsumptionTrendAnalysis:
+class TrendAnalysis:
     def __init__(self, redis_connector):
         """
         Initialize the analysis with a connection to Redis.
@@ -144,5 +144,5 @@ class ConsumptionTrendAnalysis:
 
 if __name__ == "__main__":
     redis_connector = RedisConnector().get_connection()
-    trend_analysis = ConsumptionTrendAnalysis(redis_connector)
+    trend_analysis = TrendAnalysis(redis_connector)
     trend_analysis.perform_analysis()

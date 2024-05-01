@@ -48,7 +48,9 @@ PLOT_TITLES_BY_CATEGORY = {
     'production': 'Electricity Production Trends',
     'source': 'Electricity Source Distribution',
     'storage': 'Electricity Storage Capacity Trends',
-    'transmission': 'Electricity Transmission To/From Other Countries',
+    'transmission_sweden': 'Electricity Transmission To Sweden',
+    'transmission_poland': 'Electricity Transmission To Polska',
+    'transmission_latvia': 'Electricity Transmission To Latvia',
 }
 
 
@@ -104,20 +106,31 @@ def get_key_by_tags(tag: str):
         return {
             'Actual national production of storage devices': 'storage_devices_production',
         }
-    elif tag == "transmission":
+    elif tag == "transmission_sweden":
+        return {
+            # transmission - allocated (already allocated capacity aac)
+            'allocated sweden lithuania': 'allocated_sweden_lithuania',  # transmission - allocated
+            # transmission - atc (available transfer capacities)
+            'atc_sweden_lithuania': 'atc_sweden_lithuania',  # transmission - atc
+            # transmission - ntc (net transfer capacities)
+            'ntc_sweden_lithuania': 'ntc_sweden_lithuania',  # transmission - ntc
+        }
+    elif tag == "transmission_poland":
+        return {
+            # transmission - allocated (already allocated capacity aac)
+            'allocated poland lithuania': 'allocated_poland_lithuania',  # transmission - allocated
+            'atc_poland_lithuania': 'atc_poland_lithuania',  # transmission - atc
+            # transmission - ntc (net transfer capacities)
+            'ntc_poland_lithuania': 'ntc_poland_lithuania',  # transmission - ntc
+        }
+    elif tag == "transmission_latvia":
         return {
             # transmission - allocated (already allocated capacity aac)
             'allocated latvia lithuania': "allocated_latvia_lithuania",
-            'allocated poland lithuania': 'allocated_poland_lithuania',  # transmission - allocated
-            'allocated sweden lithuania': 'allocated_sweden_lithuania',  # transmission - allocated
             # transmission - atc (available transfer capacities)
             'atc_latvia_lithuania': 'atc_latvia_lithuania',
-            'atc_sweden_lithuania': 'atc_sweden_lithuania',  # transmission - atc
-            'atc_poland_lithuania': 'atc_poland_lithuania',  # transmission - atc
             # transmission - ntc (net transfer capacities)
             'ntc_latvia_lithuania': 'ntc_latvia_lithuania',
-            'ntc_sweden_lithuania': 'ntc_sweden_lithuania',  # transmission - ntc
-            'ntc_poland_lithuania': 'ntc_poland_lithuania',  # transmission - ntc
         }
     else:
         # return error
