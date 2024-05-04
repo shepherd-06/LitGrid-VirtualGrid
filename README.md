@@ -51,7 +51,7 @@ The envisaged end-product is a thorough analysis system that will:
 
 **Python**: >= 3.9
 
-To run this project, you need Python 3.x and several packages including `redis`, `pandas`, `matplotlib`, `seaborn`, and `statsmodels`. Install all dependencies with:
+To run this project, you need **Python 3.9 or higher** and several packages including `redis`, `pandas`, `matplotlib`, `seaborn`, and `statsmodels`. Install all dependencies with:
 
 ```bash
 pip install -r requirements.txt
