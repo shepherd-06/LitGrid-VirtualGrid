@@ -49,11 +49,21 @@ The envisaged end-product is a thorough analysis system that will:
 
 ## Requirements
 
+**Python**: >= 3.9
+
 To run this project, you need Python 3.x and several packages including `redis`, `pandas`, `matplotlib`, `seaborn`, and `statsmodels`. Install all dependencies with:
 
 ```bash
 pip install -r requirements.txt
 ```
+
+Run the following command in the terminal (Tested on Ubuntu and MacOS):
+
+```bash
+export PYTHONPATH=$PYTHONPATH:$(realpath ../)
+```
+
+This portion is not *optimized*. The command above needs to be run before every **new** terminal session. Otherwise terminal/python won't find the required files.
 
 ### Usage
 
