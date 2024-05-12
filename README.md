@@ -47,7 +47,7 @@ The envisaged end-product is a thorough analysis system that will:
 - Visualize the trends and anomalies in a clear, accessible way, potentially through a web dashboard.
 - Offer insights for electricity grid management, such as load forecasting and optimizing the use of storage devices.
 
-## Requirements
+## Requirements & How to Run
 
 **Python**: >= 3.9
 
