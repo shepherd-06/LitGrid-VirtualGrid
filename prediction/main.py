@@ -127,8 +127,8 @@ def evaluate_predictions(test_data, output_folder='output'):
     }
 
     results = []
+    print("test_data")
     print(test_data.head())
-    print(test_data.columns)
 
     for model_name, file_name in model_files.items():
         file_path = os.path.join(output_folder, file_name)
@@ -143,8 +143,9 @@ def evaluate_predictions(test_data, output_folder='output'):
         predictions_df = pd.DataFrame(predictions_json)
         predictions_df['time'] = pd.to_datetime(predictions_df['time'])
         predictions_df.set_index('time', inplace=True)
+        print('-------------')
+        print(model_name)
         print(predictions_df.head())
-        print(predictions_df.columns)
 
         # Ensure we are only comparing the times that exist in both datasets
         common_index = test_data.index.intersection(predictions_df.index)
