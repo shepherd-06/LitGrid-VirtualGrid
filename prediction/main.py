@@ -87,6 +87,12 @@ def main():
     data_handler = DataHandler(redis_key=redis_key)
     train_data, test_data = data_handler.segment_data()
 
+    # print(train_data.head())
+    # print(test_data.tail())
+
+    # print(test_data.head())
+    # print(test_data.tail())
+
     model_choice = input(
         "Choose the model you want to work with (linear_regression[1]/arima[2]): ").strip().lower()
 
@@ -95,7 +101,8 @@ def main():
     elif model_choice == '2':
         run_arima(train_data, test_data)
     else:
-        print("Invalid choice. Please choose either linear_regression => [1] or arima => [2].")
+        print(
+            "Invalid choice. Please choose either linear_regression => [1] or arima => [2].")
 
 
 if __name__ == "__main__":

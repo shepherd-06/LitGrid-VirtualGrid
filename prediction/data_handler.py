@@ -18,6 +18,7 @@ class DataHandler:
 
     def segment_data(self, train_size=0.8):
         """Segment data into training and testing datasets."""
+        self.data.sort_index(inplace=True)
         cutoff = int(len(self.data) * train_size)
         training_data = self.data.iloc[:cutoff]
         testing_data = self.data.iloc[cutoff:]
