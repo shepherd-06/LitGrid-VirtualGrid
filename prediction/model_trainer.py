@@ -60,6 +60,12 @@ class ModelTrainer:
 
 class ARIMAModelTrainer:
     def __init__(self, training_data, testing_data, order=(5, 1, 0)):
+        # Ensure the DataFrame index is datetime type
+        if not pd.api.types.is_datetime64_any_dtype(training_data.index):
+            raise ValueError("Training data index must be datetime type")
+        if not pd.api.types.is_datetime64_any_dtype(testing_data.index):
+            raise ValueError("Testing data index must be datetime type")
+
         # Drop rows with NaN values in training and testing data
         self.training_data = training_data.dropna()
         self.testing_data = testing_data.dropna()
@@ -68,6 +74,8 @@ class ARIMAModelTrainer:
 
     def train(self):
         series = self.training_data['value']
+        series = series.asfreq('h')  # Ensure frequency is set
+
         kf = KFold(n_splits=5, shuffle=True, random_state=42)
         mse_scores = []
         r2_scores = []
@@ -75,6 +83,7 @@ class ARIMAModelTrainer:
         for train_index, val_index in kf.split(series):
             train, val = series.iloc[train_index], series.iloc[val_index]
 
+            # Pass time index to ARIMA
             model = ARIMA(train, order=self.order)
             model_fit = model.fit()
             predictions = model_fit.predict(
@@ -88,6 +97,8 @@ class ARIMAModelTrainer:
 
     def evaluate(self):
         series = self.testing_data['value']
+        series = series.asfreq('h')  # Ensure frequency is set
+
         predictions = self.model_fit.predict(start=len(self.training_data), end=len(
             self.training_data)+len(series)-1, dynamic=False)
         mse = mean_squared_error(series, predictions)
@@ -96,7 +107,7 @@ class ARIMAModelTrainer:
 
     def predict(self, steps):
         future_dates = pd.date_range(
-            start=self.training_data.index[-1], periods=steps+1, freq='H')[1:]
+            start=self.training_data.index[-1], periods=steps+1, freq='h')[1:]
         future_forecast = self.model_fit.forecast(steps=steps)
         return pd.DataFrame({'date': future_dates, 'value': future_forecast}).set_index('date')
 

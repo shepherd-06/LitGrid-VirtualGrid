@@ -11,10 +11,21 @@ class DataHandler:
 
     def load_data(self, redis_key):
         """Load data from a JSON file into a DataFrame."""
-        data = _DataProcessor(
-            redis_connector=self.redis_con).fetch_data_by_keytype(redis_key)
+        data = _DataProcessor(redis_connector=self.redis_con).fetch_data_by_keytype(redis_key)
         transformer = DataTransformer(data)
-        return transformer.transform_to_dataframe()
+        df = transformer.transform_to_dataframe()
+        
+        # Ensure index is datetime and sort by index
+        df.index = pd.to_datetime(df.index)
+        df = df.sort_index()
+        
+        # Resample to hourly frequency and fill missing values
+        df = df.resample('h').asfreq()  # Use 'h' instead of 'H'
+        df = df.ffill()  # Use ffill() method directly
+        
+        print(df.head())
+        
+        return df
 
     def segment_data(self, train_size=0.8):
         """Segment data into training and testing datasets."""

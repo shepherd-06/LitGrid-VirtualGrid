@@ -1,12 +1,21 @@
 import pandas as pd
 
 import json
+import warnings
 
 from prediction.data_handler import DataHandler
 from prediction.feature import FeatureEngineer
 from prediction.model_trainer import ModelTrainer, ARIMAModelTrainer
 from analysis.trend_analysis import TrendAnalysis
 from pre_processing.redis_con import RedisConnector
+
+# Suppress specific warning
+warnings.filterwarnings(
+    "ignore", message="X does not have valid feature names")
+warnings.filterwarnings("ignore", category=UserWarning, module="statsmodels.tsa.base.tsa_model",
+                        message="No supported index is available. Prediction results will be given with an integer index beginning at `start`.")
+warnings.filterwarnings("ignore", category=FutureWarning, module="statsmodels.tsa.base.tsa_model",
+                        message="No supported index is available. In the next version, calling this method in a model without a supported index will result in an exception.")
 
 
 def df_to_json(df, filename):
@@ -52,7 +61,7 @@ def run_linear_regression(train_data, test_data):
 
     last_date = trainer.get_last_available_date()
     future_features = feature_engineer.add_future_features(
-        trainer.model, last_date, frequency='H', steps=2400)
+        trainer.model, last_date, frequency='h', steps=2400)
 
     if future_features.isna().any().any():
         future_features = future_features.fillna(0)
@@ -86,12 +95,6 @@ def main():
     redis_key = 'electricity_consumption_actual'
     data_handler = DataHandler(redis_key=redis_key)
     train_data, test_data = data_handler.segment_data()
-
-    # print(train_data.head())
-    # print(test_data.tail())
-
-    # print(test_data.head())
-    # print(test_data.tail())
 
     model_choice = input(
         "Choose the model you want to work with (linear_regression[1]/arima[2]): ").strip().lower()
