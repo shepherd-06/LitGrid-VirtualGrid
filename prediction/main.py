@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 
 import json
@@ -7,9 +8,8 @@ from prediction.data_handler import DataHandler
 from prediction.feature import FeatureEngineer
 from prediction.model_trainer import ModelTrainer, ARIMAModelTrainer
 from prediction.prophet_model_trainer import ProphetModelTrainer
-
-from analysis.trend_analysis import TrendAnalysis
-from pre_processing.redis_con import RedisConnector
+from prediction.sarima_model_trainer import SARIMAModelTrainer
+from sklearn.metrics import mean_squared_error, r2_score
 
 # Suppress specific warning
 warnings.filterwarnings(
@@ -105,22 +105,94 @@ def run_prophet(train_data, test_data):
     df_to_json(future_predictions, "prophet")
 
 
+def run_sarima(train_data, test_data):
+    sarima_trainer = SARIMAModelTrainer(
+        train_data, test_data, order=(1, 1, 1), seasonal_order=(1, 1, 1, 24))
+    sarima_trainer.train()
+    mse, r2 = sarima_trainer.evaluate()
+    print(f'SARIMA - MSE: {mse}, R2: {r2}')
+
+    future_predictions = sarima_trainer.predict(steps=240)
+    print(f'Future Predictions:\n{future_predictions}')
+
+    df_to_json(future_predictions, "sarima")
+
+
+def evaluate_predictions(test_data, output_folder='output'):
+    model_files = {
+        'ARIMA': 'test_arima.json',
+        'Linear Regression': 'test_linear.json',
+        'Prophet': 'test_prophet.json',
+        'SARIMA': 'test_sarima.json'
+    }
+
+    results = []
+    print(test_data.head())
+    print(test_data.columns)
+
+    for model_name, file_name in model_files.items():
+        file_path = os.path.join(output_folder, file_name)
+
+        if not os.path.exists(file_path):
+            print(f"File not found: {file_path}")
+            continue
+
+        with open(file_path, 'r') as f:
+            predictions_json = json.load(f)
+
+        predictions_df = pd.DataFrame(predictions_json)
+        predictions_df['time'] = pd.to_datetime(predictions_df['time'])
+        predictions_df.set_index('time', inplace=True)
+        print(predictions_df.head())
+        print(predictions_df.columns)
+
+        # Ensure we are only comparing the times that exist in both datasets
+        common_index = test_data.index.intersection(predictions_df.index)
+
+        if common_index.empty:
+            print(f"No common timestamps found for model: {model_name}")
+            continue
+
+        y_true = test_data.loc[common_index, 'value']
+        y_pred = predictions_df.loc[common_index, 'value']
+
+        mse = mean_squared_error(y_true, y_pred)
+        r2 = r2_score(y_true, y_pred)
+
+        results.append({
+            'model': model_name,
+            'mse': mse,
+            'r2': r2
+        })
+
+    return results
+
+
 def main():
     redis_key = 'electricity_consumption_actual'
     data_handler = DataHandler(redis_key=redis_key)
     train_data, test_data = data_handler.segment_data()
 
     model_choice = input(
-        "Choose the model you want to work with (linear_regression[1]/arima[2]/prophet[3]): ").strip().lower()
+        "Choose the model you want to work with (linear_regression[1]/arima[2]/prophet[3]/sarima[4]/test[5]): ").strip().lower()
 
-    if model_choice == '1':
+    if model_choice == '1' or model_choice == 'linear_regression':
         run_linear_regression(train_data, test_data)
-    elif model_choice == '2':
+    elif model_choice == '2' or model_choice == 'arima':
         run_arima(train_data, test_data)
     elif model_choice == '3' or model_choice == 'prophet':
         run_prophet(train_data, test_data)
+    elif model_choice == '4' or model_choice == 'sarima':
+        run_sarima(train_data, test_data)
+    elif model_choice == '5' or model_choice == 'test':
+        results = evaluate_predictions(test_data, output_folder='output')
+        for result in results:
+            print(f"Model: {result['model']}")
+            print(f"  MSE: {result['mse']}")
+            print(f"  R²: {result['r2']}")
+            print()
     else:
-        print("Invalid choice. Please choose either 'linear_regression', 'arima', or 'prophet'.")
+        print("Invalid choice. Please choose either 'linear_regression', 'arima', 'prophet', or 'sarima'.")
 
 
 if __name__ == "__main__":
