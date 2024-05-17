@@ -3,6 +3,8 @@ import pandas as pd
 from prediction.data_handler import DataHandler
 from prediction.feature import FeatureEngineer
 from prediction.model_trainer import ModelTrainer
+from analysis.trend_analysis import TrendAnalysis
+from pre_processing.redis_con import RedisConnector
 
 def main():
     # Redis key for actual consumption data
@@ -44,7 +46,7 @@ def main():
 
     # Predict future data
     last_date = trainer.get_last_available_date()
-    future_features = feature_engineer.add_future_features(trainer.model, last_date, frequency='h', steps=24)
+    future_features = feature_engineer.add_future_features(trainer.model, last_date, frequency='h', steps=9600)
     
     # Check where NaN values are
     nan_summary = future_features.isna().sum()
@@ -66,12 +68,23 @@ def main():
 
     future_predictions = trainer.predict(future_features.drop(columns=['predicted_value'], errors='ignore'))
 
+     # Create a DataFrame for the future predictions
+    future_predictions_df = pd.DataFrame(future_predictions, index=future_features.index, columns=['value'])
+
     print("--------------")
     print("Future Predictions")
     print("--------------")
-    print(pd.DataFrame(future_predictions, index=future_features.index, columns=['Prediction']).head())
-
+    print(future_predictions_df.head())
+    print(future_predictions_df.tail())
     # Optionally, plotting or additional analysis could go here
+    # Analyze trends on the future predictions
+    trend_analysis = TrendAnalysis(RedisConnector().get_connection())
+    analyzed_df = trend_analysis.analyze_trends(future_predictions_df, '15D')
+     # Plot the results
+    data_frames = {"Future Predictions": analyzed_df}
+    trend_analysis.plot_trends(data_frames, "Future Predictions Trends", "Value (MW)")
+
+
 
 if __name__ == "__main__":
     main()
