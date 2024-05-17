@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime
-from sklearn.impute import SimpleImputer
+from statsmodels.tsa.arima.model import ARIMA
 
 
 class FeatureEngineer:
@@ -32,11 +31,15 @@ class FeatureEngineer:
         self.data['rolling_avg'] = self.data['value'].rolling(
             window=window).mean()
 
-    def prepare_features(self):
-        self.add_time_features()
-        self.add_seasonal_features()
-        self.add_lagged_features()
-        self.add_rolling_average()
+    def prepare_features(self, include_time=True, include_seasonal=True, include_lags=True, include_rolling=True):
+        if include_time:
+            self.add_time_features()
+        if include_seasonal:
+            self.add_seasonal_features()
+        if include_lags:
+            self.add_lagged_features()
+        if include_rolling:
+            self.add_rolling_average()
         return self.data
 
     def add_future_features(self, model, last_date, frequency='D', steps=10):
@@ -101,5 +104,26 @@ class FeatureEngineer:
                                                  ['lag_1', 'lag_2', 'lag_3']].dropna()
                 future_features.loc[future_dates[i + 1],
                                     'rolling_avg'] = lag_values.mean()
+
+        return future_features
+
+
+class ARIMAFeatureEngineer(FeatureEngineer):
+    def prepare_features(self):
+        # For ARIMA, we only need the target variable 'value'
+        return self.data[['value']]
+
+    def add_future_features(self, model, last_date, steps=10, frequency='D'):
+        future_dates = pd.date_range(
+            start=last_date, periods=steps + 1, freq=frequency)[1:]
+        future_features = pd.DataFrame(index=future_dates)
+
+        # Use ARIMA to predict future values
+        history = self.data['value'].tolist()
+        for i in range(steps):
+            model_fit = ARIMA(history, order=model.order).fit()
+            forecast = model_fit.forecast()[0]
+            history.append(forecast)
+            future_features.loc[future_dates[i], 'predicted_value'] = forecast
 
         return future_features
