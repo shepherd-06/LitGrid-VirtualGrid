@@ -84,7 +84,7 @@ class TrendAnalysis:
         sns.set(style="whitegrid")
 
         for label, df in dfs.items():
-            sns.lineplot(data=df, x=df.index, y='rolling_avg',
+            sns.lineplot(data=df, x=df.index, y='value',
                          label=f'{label} Trends')
             if 'outlier' in df.columns:
                 outliers = df[df['outlier']]

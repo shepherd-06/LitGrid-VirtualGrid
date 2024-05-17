@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from datetime import datetime
 from sklearn.impute import SimpleImputer
@@ -9,26 +10,31 @@ class FeatureEngineer:
         self.data = data.copy()
 
     def add_time_features(self):
-        """Add time-based features to the DataFrame."""
         self.data['year'] = self.data.index.year
         self.data['month'] = self.data.index.month
         self.data['day'] = self.data.index.day
         self.data['hour'] = self.data.index.hour
         self.data['minute'] = self.data.index.minute
 
+    def add_seasonal_features(self):
+        self.data['sin_day'] = np.sin(
+            2 * np.pi * self.data.index.dayofyear / 365.25)
+        self.data['cos_day'] = np.cos(
+            2 * np.pi * self.data.index.dayofyear / 365.25)
+        self.data['sin_hour'] = np.sin(2 * np.pi * self.data.index.hour / 24)
+        self.data['cos_hour'] = np.cos(2 * np.pi * self.data.index.hour / 24)
+
     def add_lagged_features(self, lags=3):
-        """Add lagged consumption values as new features."""
         for lag in range(1, lags + 1):
-            self.data.loc[:, f'lag_{lag}'] = self.data['value'].shift(lag)
+            self.data[f'lag_{lag}'] = self.data['value'].shift(lag)
 
     def add_rolling_average(self, window=3):
-        """Add rolling average for consumption."""
-        self.data.loc[:, 'rolling_avg'] = self.data['value'].rolling(
+        self.data['rolling_avg'] = self.data['value'].rolling(
             window=window).mean()
 
     def prepare_features(self):
-        """Prepare all features."""
         self.add_time_features()
+        self.add_seasonal_features()
         self.add_lagged_features()
         self.add_rolling_average()
         return self.data
@@ -44,6 +50,16 @@ class FeatureEngineer:
         future_features['day'] = future_dates.day
         future_features['hour'] = future_dates.hour
         future_features['minute'] = future_dates.minute
+
+        # Initialize seasonal features
+        future_features['sin_day'] = np.sin(
+            2 * np.pi * future_dates.dayofyear / 365.25)
+        future_features['cos_day'] = np.cos(
+            2 * np.pi * future_dates.dayofyear / 365.25)
+        future_features['sin_hour'] = np.sin(
+            2 * np.pi * future_dates.hour / 24)
+        future_features['cos_hour'] = np.cos(
+            2 * np.pi * future_dates.hour / 24)
 
         # Initialize lag features based on the last available values
         last_values = self.data['value'].tail(
