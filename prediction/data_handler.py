@@ -23,8 +23,6 @@ class DataHandler:
         df = df.resample('h').asfreq()  # Use 'h' instead of 'H'
         df = df.ffill()  # Use ffill() method directly
         
-        print(df.head())
-        
         return df
 
     def segment_data(self, train_size=0.8):

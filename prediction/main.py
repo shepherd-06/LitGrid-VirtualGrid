@@ -6,6 +6,8 @@ import warnings
 from prediction.data_handler import DataHandler
 from prediction.feature import FeatureEngineer
 from prediction.model_trainer import ModelTrainer, ARIMAModelTrainer
+from prediction.prophet_model_trainer import ProphetModelTrainer
+
 from analysis.trend_analysis import TrendAnalysis
 from pre_processing.redis_con import RedisConnector
 
@@ -91,21 +93,34 @@ def run_arima(train_data, test_data):
     df_to_json(future_predictions, "arima")
 
 
+def run_prophet(train_data, test_data):
+    prophet_trainer = ProphetModelTrainer(train_data, test_data)
+    prophet_trainer.train()
+    mse, r2 = prophet_trainer.evaluate()
+    print(f'Prophet - MSE: {mse}, R2: {r2}')
+
+    future_predictions = prophet_trainer.predict(steps=2400)
+    print(f'Future Predictions:\n{future_predictions}')
+
+    df_to_json(future_predictions, "prophet")
+
+
 def main():
     redis_key = 'electricity_consumption_actual'
     data_handler = DataHandler(redis_key=redis_key)
     train_data, test_data = data_handler.segment_data()
 
     model_choice = input(
-        "Choose the model you want to work with (linear_regression[1]/arima[2]): ").strip().lower()
+        "Choose the model you want to work with (linear_regression[1]/arima[2]/prophet[3]): ").strip().lower()
 
     if model_choice == '1':
         run_linear_regression(train_data, test_data)
     elif model_choice == '2':
         run_arima(train_data, test_data)
+    elif model_choice == '3' or model_choice == 'prophet':
+        run_prophet(train_data, test_data)
     else:
-        print(
-            "Invalid choice. Please choose either linear_regression => [1] or arima => [2].")
+        print("Invalid choice. Please choose either 'linear_regression', 'arima', or 'prophet'.")
 
 
 if __name__ == "__main__":
