@@ -17,7 +17,7 @@ class ProphetModelTrainer:
         self.testing_data = testing_data.dropna()
         self.model = Prophet()
         self.n_splits = n_splits
-        self.training_data = pd.concat([self.training_data, self.testing_data])
+        # self.training_data = pd.concat([self.training_data, self.testing_data])
 
     def train(self):
         df = self.training_data.reset_index().rename(

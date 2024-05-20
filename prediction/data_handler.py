@@ -25,7 +25,7 @@ class DataHandler:
         
         return df
 
-    def segment_data(self, train_size=0.8):
+    def segment_data(self, train_size=0.6):
         """Segment data into training and testing datasets."""
         self.data.sort_index(inplace=True)
         cutoff = int(len(self.data) * train_size)
