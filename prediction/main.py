@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 
 from prediction.data_handler import DataHandler
 from prediction.feature import FeatureEngineer
-from prediction.model_trainer import ModelTrainer, ARIMAModelTrainer
+from prediction.model_trainer import ModelTrainer
+from prediction.arima_model_trainer import ARIMAModelTrainer
 from prediction.prophet_model_trainer import ProphetModelTrainer
 from prediction.sarima_model_trainer import SARIMAModelTrainer
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
@@ -172,16 +173,16 @@ def plot_predictions_v2(model_name):
         'Prophet': 'test_prophet.json',
         'SARIMA': 'test_sarima.json'
     }
-    
+
     file_name = model_files[model_name]
     file_path = os.path.join("output", file_name)
-    
+
     if not os.path.exists(file_path):
-            print(f"File not found: {file_path}")
-            return
-        
+        print(f"File not found: {file_path}")
+        return
+
     with open(file_path, 'r') as f:
-            predictions_json = json.load(f)
+        predictions_json = json.load(f)
 
     predictions_df = pd.DataFrame(predictions_json)
     predictions_df['time'] = pd.to_datetime(predictions_df['time'])
@@ -265,7 +266,7 @@ def main():
     if model_choice == '1' or model_choice == 'linear_regression':
         run_linear_regression(train_data, test_data)
     elif model_choice == '2' or model_choice == 'arima':
-        run_arima(train_data, test_data)
+        run_arima(train_data, test_data, 7200)
     elif model_choice == '3' or model_choice == 'prophet':
         run_prophet(train_data, test_data)
     elif model_choice == '4' or model_choice == 'sarima':
