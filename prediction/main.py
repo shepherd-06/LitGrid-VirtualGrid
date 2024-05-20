@@ -3,13 +3,16 @@ import pandas as pd
 
 import json
 import warnings
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 
 from prediction.data_handler import DataHandler
 from prediction.feature import FeatureEngineer
 from prediction.model_trainer import ModelTrainer, ARIMAModelTrainer
 from prediction.prophet_model_trainer import ProphetModelTrainer
 from prediction.sarima_model_trainer import SARIMAModelTrainer
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
 # Suppress specific warning
 warnings.filterwarnings(
@@ -118,6 +121,50 @@ def run_sarima(train_data, test_data):
     df_to_json(future_predictions, "sarima")
 
 
+def plot_predictions(test_data, output_folder='output'):
+    model_files = {
+        'ARIMA': 'test_arima.json',
+        'Linear Regression': 'test_linear.json',
+        'Prophet': 'test_prophet.json',
+        'SARIMA': 'test_sarima.json'
+    }
+
+    test_data = test_data.resample('D').mean().reset_index()
+    test_data['model'] = "Test Sample"
+
+    all_predictions = [test_data]
+
+    for model_name, file_name in model_files.items():
+        file_path = os.path.join(output_folder, file_name)
+
+        if not os.path.exists(file_path):
+            print(f"File not found: {file_path}")
+            continue
+
+        with open(file_path, 'r') as f:
+            predictions_json = json.load(f)
+
+        predictions_df = pd.DataFrame(predictions_json)
+        predictions_df['time'] = pd.to_datetime(predictions_df['time'])
+        predictions_df.set_index('time', inplace=True)
+
+        predictions_df = predictions_df.resample('D').mean().reset_index()
+        predictions_df['model'] = model_name
+
+        all_predictions.append(predictions_df)
+
+    combined_df = pd.concat(all_predictions)
+
+    plt.figure(figsize=(14, 7))
+    sns.lineplot(x='timestamp', y='value', hue='model', data=combined_df)
+    plt.title('Model Predictions vs Test Data')
+    plt.xlabel('Time')
+    plt.ylabel('Value')
+    plt.legend(title='Model')
+    plt.grid(True)
+    plt.show()
+
+
 def evaluate_predictions(test_data, output_folder='output'):
     model_files = {
         'ARIMA': 'test_arima.json',
@@ -159,13 +206,16 @@ def evaluate_predictions(test_data, output_folder='output'):
 
         mse = mean_squared_error(y_true, y_pred)
         r2 = r2_score(y_true, y_pred)
+        mae = mean_absolute_error(y_true, y_pred)
 
         results.append({
             'model': model_name,
             'mse': mse,
-            'r2': r2
+            'r2': r2,
+            'mae': mae
         })
-
+        
+    plot_predictions(test_data)
     return results
 
 
@@ -191,6 +241,7 @@ def main():
             print(f"Model: {result['model']}")
             print(f"  MSE: {result['mse']}")
             print(f"  R²: {result['r2']}")
+            print(f"  MAE: {result['mae']}")
             print()
     else:
         print("Invalid choice. Please choose either 'linear_regression', 'arima', 'prophet', or 'sarima'.")
