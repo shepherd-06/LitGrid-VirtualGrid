@@ -52,7 +52,7 @@ def analyze_trends(df, freq='15D'):
     return avg_max_min_resampled_df
 
 
-def run_linear_regression(train_data, test_data):
+def run_linear_regression(train_data, test_data, steps=7200):
     feature_engineer = FeatureEngineer(train_data)
     train_features = feature_engineer.prepare_features()
 
@@ -66,7 +66,7 @@ def run_linear_regression(train_data, test_data):
 
     last_date = trainer.get_last_available_date()
     future_features = feature_engineer.add_future_features(
-        trainer.model, last_date, frequency='h', steps=2400)
+        trainer.model, last_date, frequency='h', steps=steps)
 
     if future_features.isna().any().any():
         future_features = future_features.fillna(0)
@@ -84,38 +84,38 @@ def run_linear_regression(train_data, test_data):
     df_to_json(future_predictions_df, "linear")
 
 
-def run_arima(train_data, test_data):
+def run_arima(train_data, test_data, steps=7200):
     arima_trainer = ARIMAModelTrainer(train_data, test_data, order=(5, 1, 0))
     arima_trainer.train()
     mse, r2 = arima_trainer.evaluate()
     print(f'ARIMA - MSE: {mse}, R2: {r2}')
 
-    future_predictions = arima_trainer.predict(steps=2400)
+    future_predictions = arima_trainer.predict(steps=steps)
     print(f'Future Predictions:\n{future_predictions}')
 
     df_to_json(future_predictions, "arima")
 
 
-def run_prophet(train_data, test_data):
+def run_prophet(train_data, test_data, steps=7200):
     prophet_trainer = ProphetModelTrainer(train_data, test_data)
     prophet_trainer.train()
     mse, r2 = prophet_trainer.evaluate()
     print(f'Prophet - MSE: {mse}, R2: {r2}')
 
-    future_predictions = prophet_trainer.predict(steps=2400)
+    future_predictions = prophet_trainer.predict(steps=steps)
     print(f'Future Predictions:\n{future_predictions}')
 
     df_to_json(future_predictions, "prophet")
 
 
-def run_sarima(train_data, test_data):
+def run_sarima(train_data, test_data, steps=7200):
     sarima_trainer = SARIMAModelTrainer(
         train_data, test_data, order=(1, 1, 1), seasonal_order=(1, 1, 1, 24))
     sarima_trainer.train()
     mse, r2 = sarima_trainer.evaluate()
     print(f'SARIMA - MSE: {mse}, R2: {r2}')
 
-    future_predictions = sarima_trainer.predict(steps=240)
+    future_predictions = sarima_trainer.predict(steps=steps)
     print(f'Future Predictions:\n{future_predictions}')
 
     df_to_json(future_predictions, "sarima")
@@ -157,6 +157,41 @@ def plot_predictions(test_data, output_folder='output'):
 
     plt.figure(figsize=(14, 7))
     sns.lineplot(x='timestamp', y='value', hue='model', data=combined_df)
+    plt.title('Model Predictions vs Test Data')
+    plt.xlabel('Time')
+    plt.ylabel('Value')
+    plt.legend(title='Model')
+    plt.grid(True)
+    plt.show()
+
+
+def plot_predictions_v2(model_name):
+    model_files = {
+        'ARIMA': 'test_arima.json',
+        'Linear Regression': 'test_linear.json',
+        'Prophet': 'test_prophet.json',
+        'SARIMA': 'test_sarima.json'
+    }
+    
+    file_name = model_files[model_name]
+    file_path = os.path.join("output", file_name)
+    
+    if not os.path.exists(file_path):
+            print(f"File not found: {file_path}")
+            return
+        
+    with open(file_path, 'r') as f:
+            predictions_json = json.load(f)
+
+    predictions_df = pd.DataFrame(predictions_json)
+    predictions_df['time'] = pd.to_datetime(predictions_df['time'])
+    predictions_df.set_index('time', inplace=True)
+
+    predictions_df = predictions_df.resample('D').mean().reset_index()
+    predictions_df['model'] = model_name
+
+    plt.figure(figsize=(14, 7))
+    sns.lineplot(x='time', y='value', hue='model', data=predictions_df)
     plt.title('Model Predictions vs Test Data')
     plt.xlabel('Time')
     plt.ylabel('Value')
@@ -214,7 +249,7 @@ def evaluate_predictions(test_data, output_folder='output'):
             'r2': r2,
             'mae': mae
         })
-        
+
     plot_predictions(test_data)
     return results
 
@@ -225,7 +260,7 @@ def main():
     train_data, test_data = data_handler.segment_data()
 
     model_choice = input(
-        "Choose the model you want to work with (linear_regression[1]/arima[2]/prophet[3]/sarima[4]/test[5]): ").strip().lower()
+        "Choose the model you want to work with (linear_regression[1]/arima[2]/prophet[3]/sarima[4]/test[5]/specific graph[6]): ").strip().lower()
 
     if model_choice == '1' or model_choice == 'linear_regression':
         run_linear_regression(train_data, test_data)
@@ -243,8 +278,20 @@ def main():
             print(f"  R²: {result['r2']}")
             print(f"  MAE: {result['mae']}")
             print()
+    elif model_choice == '6':
+        graph_choice = input(
+            "Which graph to show: [linear[1], arima[2], prophet[3], sarima[4]]? = ")
+
+        if graph_choice == "1":
+            plot_predictions_v2("Linear Regression")
+        elif graph_choice == "2":
+            plot_predictions_v2("ARIMA")
+        elif graph_choice == "3":
+            plot_predictions_v2("Prophet")
+        elif graph_choice == "4":
+            plot_predictions_v2("SARIMA")
     else:
-        print("Invalid choice. Please choose either 'linear_regression', 'arima', 'prophet', or 'sarima'.")
+        print("Invalid choice!")
 
 
 if __name__ == "__main__":
